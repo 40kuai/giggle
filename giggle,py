@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+# __author__ = '40kuai'
+
+"""
+1. 检测ncdu命令。根据系统进行安装。
+2. 使用ncdu命令生成相关文件信息文件。
+3. 对文件进行处理。
+"""
+
+import os
+import sys
+import json
+
+
+class InstallNcdu():
+    "检测ncdu命令。根据系统进行安装。"
+
+    def __init__(self):
+        self.system_name = sys.platform
+        self.install_stutus = False
+        if self.system_name == 'linux2':
+            os.system('yum -y install ncdu')
+            self.install_stutus = True
+
+
+class FilterFile():
+    """通过处理文件，按照给定大小筛选大文件"""
+
+    def __init__(self, file_top=5, file_size=None, check_dir='/', file_path='/tmp/', file_name='ncdu.json'):
+        self.dir_list = []
+        self.file_top = file_top
+        self.check_dir = check_dir
+        self.file_path = file_path
+        self.file_name = file_name
+        self.create_file()
+
+    def create_file(self):
+        create_file_cmd = 'ncdu %s -o %s%s' % (self.check_dir, self.file_path, self.file_name)
+        ret_id = os.system(create_file_cmd)
+        if ret_id == 0:
+            return True
+        else:
+            return False
+
+    def print_f(self, list_obj):
+        if isinstance(list_obj, list):
+            for i in list_obj:
+                self.dir_list.append(list_obj[0]['name'])
+                self.print_f(i)
+                self.dir_list.pop()
+        else:
+            if isinstance(list_obj, dict) and 'asize' in list_obj:
+                if list_obj['asize'] > 102400000:
+                    print '大文件：', list_obj, '路径：', ''.join(self.dir_list)
+        with open('helei.txt', ) as file:
+            all_string = file.read()
+
+        json_data = json.loads(all_string)
+        self.print_f(json_data[3])
+
+
+if __name__ == '__main__':
+    obj = InstallNcdu()
+    print obj.system_name
